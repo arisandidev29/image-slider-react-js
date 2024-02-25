@@ -1,35 +1,52 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
-
+import { useEffect, useState } from "react";
+import ImageSlider from "./component/ImageSlider";
+import ImageView from "./component/ImageView";
 function App() {
-  const [count, setCount] = useState(0)
+  const api_key = import.meta.env.VITE_ACCESS_KEY 
+  const [initialImages, setInitialImages] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedId, setSelectedId] = useState(null)
+
+  useEffect(
+    () => {
+      const image = async () => {
+        const response = await fetch(`https://api.unsplash.com/search/photos/?query=mountain&per_page=20&client_id=${api_key}`)
+        const data = await response.json()
+        setInitialImages(data.results)
+        setIsLoading(false)
+        setSelectedId(data.results[0].id)
+      }
+      image()
+    }, []
+  ) 
+   
+  const selectedImage = initialImages.find(image => {
+    return image.id == selectedId
+  }) 
+  console.log(selectedImage)
+  function handleClickImage(id) {
+    setSelectedId(id)
+  }
+
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <main style={{
+      // backgroundImage: `url(${selectedImage.img})`,
+    }}>
+      {
+        isLoading && <h1>Loading</h1>
+      }
+      {
+        !isLoading && (
+          <>
+            <img className="bg-image" src={selectedImage.urls.regular} alt="" /> 
+            <ImageView image={selectedImage} />
+            <ImageSlider images={initialImages} onClickImage={handleClickImage} activeId={selectedId} />
+          </>   
+        )
+      }
+    </main>
   )
 }
 
-export default App
+export default App;
